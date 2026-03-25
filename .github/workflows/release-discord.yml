@@ -1,4 +1,3 @@
-# .github/workflows/release-discord.yml
 name: Notify Discord on Release
 
 on:
