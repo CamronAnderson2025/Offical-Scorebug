@@ -17,9 +17,44 @@ jobs:
           DOWNLOAD_URL: https://smnsportslive.org/download
           ROLE: "<@&1504903044771479693>"
         run: |
+          BODY=$(echo "$BODY" | head -c 1000)
+
           PAYLOAD=$(jq -n \
-            --arg content "**New Release Published!** $ROLE\nRepository: $REPO\nRelease: $TAG\nDescription: $BODY\n[Download Here]($DOWNLOAD_URL)" \
-            '{content: $content}')
+            --arg repo "$REPO" \
+            --arg tag "$TAG" \
+            --arg body "$BODY" \
+            --arg url "$DOWNLOAD_URL" \
+            --arg role "$ROLE" \
+            '{
+              content: $role,
+              embeds: [
+                {
+                  title: "New Release Published!",
+                  color: 5814783,
+                  fields: [
+                    {name: "Repository", value: $repo, inline: false},
+                    {name: "Release", value: $tag, inline: true},
+                    {name: "Description", value: $body, inline: false}
+                  ],
+                  footer: {
+                    text: "SMN Sports Live"
+                  }
+                }
+              ],
+              components: [
+                {
+                  type: 1,
+                  components: [
+                    {
+                      type: 2,
+                      style: 5,
+                      label: "Download",
+                      url: $url
+                    }
+                  ]
+                }
+              ]
+            }')
 
           curl -H "Content-Type: application/json" \
                -X POST \
