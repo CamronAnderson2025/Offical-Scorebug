@@ -26,14 +26,13 @@ jobs:
             --arg url "$DOWNLOAD_URL" \
             --arg role "$ROLE" \
             '{
-              content: $role,
+              content: ($role + " **New Release: " + $tag + "**"),
               embeds: [
                 {
-                  title: "New Release Published!",
+                  title: "Release Details",
                   color: 5814783,
                   fields: [
                     {name: "Repository", value: $repo, inline: false},
-                    {name: "Release", value: $tag, inline: true},
                     {name: "Description", value: $body, inline: false}
                   ],
                   footer: {
