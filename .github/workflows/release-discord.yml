@@ -14,11 +14,11 @@ jobs:
           REPO: ${{ github.repository }}
           TAG: ${{ github.event.release.tag_name }}
           BODY: ${{ github.event.release.body }}
-          URL: ${{ github.event.release.html_url }}
+          DOWNLOAD_URL: https://smnsportslive.org/download
           ROLE: "<@&1504903044771479693>"
         run: |
           PAYLOAD=$(jq -n \
-            --arg content "**New Release Published!** $ROLE\nRepository: $REPO\nRelease: $TAG\nDescription: $BODY\n[View Release]($URL)" \
+            --arg content "**New Release Published!** $ROLE\nRepository: $REPO\nRelease: $TAG\nDescription: $BODY\n[Download Here]($DOWNLOAD_URL)" \
             '{content: $content}')
 
           curl -H "Content-Type: application/json" \
