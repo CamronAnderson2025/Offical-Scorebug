@@ -9,10 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+          BODY: ${{ github.event.release.body }}
+          URL: ${{ github.event.release.html_url }}
+          ROLE: "<@&1504903044771479693>"
         run: |
+          PAYLOAD=$(jq -n \
+            --arg content "**New Release Published!** $ROLE\nRepository: $REPO\nRelease: $TAG\nDescription: $BODY\n[View Release]($URL)" \
+            '{content: $content}')
+
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d '{
-                 "content": "**New Release Published!**\nRepository: '"${GITHUB_REPOSITORY}"'\nRelease: '"${GITHUB_REF#refs/tags/}"'\nDescription: '"${{ github.event.release.body }}"'\n[View Release]('"${{ github.event.release.html_url }}"')"
-               }' \
-               ${{ secrets.DISCORD_WEBHOOK_URL }}
+               -d "$PAYLOAD" \
+               "$WEBHOOK_URL"
