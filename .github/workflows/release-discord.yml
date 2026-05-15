@@ -27,36 +27,19 @@ jobs:
             --arg role "$ROLE" \
             '{
               content: ($role + " **New Release: " + $tag + "**"),
-
               embeds: [
                 {
-                  title: "🆕 Update Released — Version " + $tag,
+                  title: "Release Details",
                   color: 5814783,
-
                   fields: [
-                    {
-                      name: "📦 Repository",
-                      value: $repo,
-                      inline: false
-                    },
-                    {
-                      name: "🧾 Patch Notes",
-                      value: ($body == "" ? "No description provided." : $body),
-                      inline: false
-                    },
-                    {
-                      name: "⬇️ Download",
-                      value: "[Click here to download](" + $url + ")",
-                      inline: false
-                    }
+                    {name: "Repository", value: $repo, inline: false},
+                    {name: "Description", value: $body, inline: false}
                   ],
-
                   footer: {
-                    text: "SMN Sports Live • Automated Release System"
+                    text: "SMN Sports Live"
                   }
                 }
               ],
-
               components: [
                 {
                   type: 1,
@@ -64,7 +47,7 @@ jobs:
                     {
                       type: 2,
                       style: 5,
-                      label: "Download Latest Build",
+                      label: "Download",
                       url: $url
                     }
                   ]
