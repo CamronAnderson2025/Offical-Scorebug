@@ -3,6 +3,7 @@ name: Notify Discord on Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   discord_notify:
@@ -13,8 +14,8 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
-          TAG: ${{ github.event.release.tag_name }}
-          BODY: ${{ github.event.release.body }}
+          TAG: ${{ github.event.release.tag_name || github.ref_name || 'v-test-1.0.0' }}
+          BODY: ${{ github.event.release.body || 'Test release body for Discord webhook (workflow_dispatch test mode)' }}
           DOWNLOAD_URL: https://smnsportslive.org/download
           ROLE: "<@&1504903044771479693>"
 
