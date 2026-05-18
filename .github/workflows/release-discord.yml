@@ -10,17 +10,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Send Discord Webhook
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
-          TAG: ${{ github.event.release.tag_name || github.ref_name || 'v-test-1.0.0' }}
-          BODY: ${{ github.event.release.body || 'Test release body for Discord webhook (workflow_dispatch test mode)' }}
+          TAG: ${{ github.event.release.tag_name }}
+          BODY: ${{ github.event.release.body }}
           DOWNLOAD_URL: https://smnsportslive.org/download
           ROLE: "<@&1504903044771479693>"
 
         run: |
           set -e
+
+          TAG="${TAG:-v-test-1.0.0}"
+          BODY="${BODY:-Test release body for Discord webhook (workflow_dispatch test mode)}"
 
           BODY=$(echo "$BODY" | head -c 1500)
 
