@@ -7,6 +7,7 @@ on:
 jobs:
   discord_notify:
     runs-on: ubuntu-latest
+
     steps:
       - name: Send Discord Webhook
         env:
@@ -16,8 +17,11 @@ jobs:
           BODY: ${{ github.event.release.body }}
           DOWNLOAD_URL: https://smnsportslive.org/download
           ROLE: "<@&1504903044771479693>"
+
         run: |
-          BODY=$(echo "$BODY" | head -c 1000)
+          set -e
+
+          BODY=$(echo "$BODY" | head -c 1500)
 
           PAYLOAD=$(jq -n \
             --arg repo "$REPO" \
@@ -30,7 +34,7 @@ jobs:
 
               embeds: [
                 {
-                  title: "🆕 Update Released — Version " + $tag,
+                  title: ("🆕 Update Released — Version " + $tag),
                   color: 5814783,
 
                   fields: [
@@ -41,12 +45,12 @@ jobs:
                     },
                     {
                       name: "🧾 Patch Notes",
-                      value: ($body == "" ? "No description provided." : $body),
+                      value: (if $body == "" then "No description provided." else $body end),
                       inline: false
                     },
                     {
                       name: "⬇️ Download",
-                      value: "[Click here to download](" + $url + ")",
+                      value: ("[Click here to download](" + $url + ")"),
                       inline: false
                     }
                   ],
