@@ -25,9 +25,11 @@ jobs:
         run: |
           set -e
 
+          # Fallbacks for workflow_dispatch or missing release data
           TAG="${TAG:-v-test-1.0.0}"
           BODY="${BODY:-Test release body for Discord webhook (workflow_dispatch test mode)}"
 
+          # Trim body safely
           BODY=$(echo "$BODY" | head -c 1500)
 
           PAYLOAD=$(jq -n \
@@ -52,7 +54,7 @@ jobs:
                     },
                     {
                       name: "🧾 Patch Notes",
-                      value: (if $body == "" then "No description provided." else $body end),
+                      value: (if $body == null or $body == "" then "No description provided." else $body end),
                       inline: false
                     },
                     {
