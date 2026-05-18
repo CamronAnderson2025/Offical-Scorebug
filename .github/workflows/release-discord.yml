@@ -23,10 +23,10 @@ jobs:
         run: |
           set -e
 
-          # Detect event safely (NO GitHub expression injection)
+          # Detect event safely
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
             TAG="$GITHUB_REF_NAME"
-            BODY=$(jq -r '.release.body' "$GITHUB_EVENT_PATH")
+            BODY=$(jq -r '.release.body // ""' "$GITHUB_EVENT_PATH")
           else
             TAG="v-test-1.0.0"
             BODY="Test release body for Discord webhook (workflow_dispatch test mode)"
@@ -35,7 +35,8 @@ jobs:
           TAG="${TAG:-v-test-1.0.0}"
           BODY="${BODY:-No description provided}"
 
-          BODY=$(echo "$BODY" | head -c 1500)
+          # Trim + escape newlines safely for JSON
+          BODY=$(echo "$BODY" | head -c 1500 | sed ':a;N;$!ba;s/\n/\\n/g')
 
           PAYLOAD=$(jq -n \
             --arg repo "$REPO" \
@@ -64,7 +65,7 @@ jobs:
                     },
                     {
                       name: "⬇️ Download",
-                      value: ("[Click here to download](" + $url + ")"),
+                      value: "https://smnsportslive.org/download",
                       inline: false
                     }
                   ],
@@ -83,7 +84,7 @@ jobs:
                       type: 2,
                       style: 5,
                       label: "Download Latest Build",
-                      url: $url
+                      url: "https://smnsportslive.org/download"
                     }
                   ]
                 }
