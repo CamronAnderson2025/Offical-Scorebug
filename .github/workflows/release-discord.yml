@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Send Discord Webhook
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -23,7 +20,9 @@ jobs:
         run: |
           set -e
 
-          # Detect event safely
+          # -----------------------------
+          # Get TAG + BODY safely
+          # -----------------------------
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
             TAG="$GITHUB_REF_NAME"
             BODY=$(jq -r '.release.body // ""' "$GITHUB_EVENT_PATH")
@@ -35,9 +34,12 @@ jobs:
           TAG="${TAG:-v-test-1.0.0}"
           BODY="${BODY:-No description provided}"
 
-          # Trim + escape newlines safely for JSON
-          BODY=$(echo "$BODY" | head -c 1500 | sed ':a;N;$!ba;s/\n/\\n/g')
+          # Hard trim only (NO sed hacks)
+          BODY=$(printf "%.1500s" "$BODY")
 
+          # -----------------------------
+          # Build payload (SAFE jq only)
+          # -----------------------------
           PAYLOAD=$(jq -n \
             --arg repo "$REPO" \
             --arg tag "$TAG" \
@@ -60,7 +62,7 @@ jobs:
                     },
                     {
                       name: "🧾 Patch Notes",
-                      value: (if $body == "" then "No description provided." else $body end),
+                      value: (if ($body | length) == 0 then "No description provided." else $body end),
                       inline: false
                     },
                     {
@@ -91,7 +93,10 @@ jobs:
               ]
             }')
 
-          curl -H "Content-Type: application/json" \
+          # -----------------------------
+          # Send to Discord
+          # -----------------------------
+          curl -sS -H "Content-Type: application/json" \
                -X POST \
                -d "$PAYLOAD" \
                "$WEBHOOK_URL"
