@@ -17,19 +17,24 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
-          TAG: ${{ github.event.release.tag_name }}
-          BODY: ${{ github.event.release.body }}
           DOWNLOAD_URL: https://smnsportslive.org/download
           ROLE: "<@&1504903044771479693>"
 
         run: |
           set -e
 
-          # Fallbacks for workflow_dispatch or missing release data
-          TAG="${TAG:-v-test-1.0.0}"
-          BODY="${BODY:-Test release body for Discord webhook (workflow_dispatch test mode)}"
+          # Detect event type safely
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            TAG="$GITHUB_REF_NAME"
+            BODY="${{ github.event.release.body }}"
+          else
+            TAG="v-test-1.0.0"
+            BODY="Test release body for Discord webhook (workflow_dispatch test mode)"
+          fi
 
-          # Trim body safely
+          TAG="${TAG:-v-test-1.0.0}"
+          BODY="${BODY:-No description provided}"
+
           BODY=$(echo "$BODY" | head -c 1500)
 
           PAYLOAD=$(jq -n \
@@ -54,7 +59,7 @@ jobs:
                     },
                     {
                       name: "🧾 Patch Notes",
-                      value: (if $body == null or $body == "" then "No description provided." else $body end),
+                      value: (if $body == "" then "No description provided." else $body end),
                       inline: false
                     },
                     {
@@ -65,7 +70,7 @@ jobs:
                   ],
 
                   footer: {
-                    text: "SMN Sports Live • Automated Release System"
+                    text: "SMN Sports • Automated Release System"
                   }
                 }
               ],
