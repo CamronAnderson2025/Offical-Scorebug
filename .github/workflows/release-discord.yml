@@ -21,37 +21,47 @@ jobs:
           set -e
 
           # -----------------------------
-          # Get TAG + BODY safely
+          # Extract release data safely
           # -----------------------------
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
-            TAG="$GITHUB_REF_NAME"
-            BODY=$(jq -r '.release.body // ""' "$GITHUB_EVENT_PATH")
+            TAG="${{ github.event.release.tag_name }}"
+            BODY='${{ github.event.release.body }}'
+            URL="${{ github.event.release.html_url }}"
           else
             TAG="v-test-1.0.0"
             BODY="Test release body for Discord webhook (workflow_dispatch test mode)"
+            URL="https://github.com/${REPO}"
           fi
 
-          TAG="${TAG:-v-test-1.0.0}"
+          TAG="${TAG:-v-test}"
           BODY="${BODY:-No description provided}"
-
-          # Hard trim only (NO sed hacks)
-          BODY=$(printf "%.1500s" "$BODY")
+          URL="${URL:-https://github.com/${REPO}}"
 
           # -----------------------------
-          # Build payload (SAFE jq only)
+          # Trim safely (Discord limit protection)
+          # -----------------------------
+          BODY=$(printf "%.1800s" "$BODY")
+
+          # Escape quotes for JSON safety
+          BODY=$(echo "$BODY" | sed 's/"/\\"/g')
+
+          # -----------------------------
+          # Build JSON payload safely
           # -----------------------------
           PAYLOAD=$(jq -n \
             --arg repo "$REPO" \
             --arg tag "$TAG" \
             --arg body "$BODY" \
-            --arg url "$DOWNLOAD_URL" \
+            --arg url "$URL" \
+            --arg download "$DOWNLOAD_URL" \
             --arg role "$ROLE" \
             '{
-              content: ($role + " **New Release: " + $tag + "**"),
+              content: ($role + " 🚀 **New Release: " + $tag + "**"),
 
               embeds: [
                 {
-                  title: ("🆕 Update Released — Version " + $tag),
+                  title: ("🆕 New Release — " + $tag),
+                  url: $url,
                   color: 5814783,
 
                   fields: [
@@ -61,13 +71,13 @@ jobs:
                       inline: false
                     },
                     {
-                      name: "🧾 Patch Notes",
+                      name: "🧾 Release Notes",
                       value: (if ($body | length) == 0 then "No description provided." else $body end),
                       inline: false
                     },
                     {
                       name: "⬇️ Download",
-                      value: "https://smnsportslive.org/download",
+                      value: $download,
                       inline: false
                     }
                   ],
@@ -75,20 +85,6 @@ jobs:
                   footer: {
                     text: "SMN Sports • Automated Release System"
                   }
-                }
-              ],
-
-              components: [
-                {
-                  type: 1,
-                  components: [
-                    {
-                      type: 2,
-                      style: 5,
-                      label: "Download Latest Build",
-                      url: "https://smnsportslive.org/download"
-                    }
-                  ]
                 }
               ]
             }')
